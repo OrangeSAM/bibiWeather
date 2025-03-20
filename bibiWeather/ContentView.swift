@@ -1,97 +1,175 @@
+////
+////  ContentView.swift
+////  bibiWeather
+////
+////  Created by 刘一笔 on 2025/3/18.
+////
 //
-//  ContentView.swift
-//  bibiWeather
+//import SwiftUI
 //
-//  Created by 刘一笔 on 2025/3/18.
+//struct ContentView: View {
+//    @State var degree: Int = 37
+//    @State var isDark = false
 //
+//    var body: some View {
+//        ZStack {
+//            LinearGradient(
+//                colors: isDark
+//                    ? [Color.black, Color.gray] : [Color.blue, Color.white],
+//                startPoint: .topLeading, endPoint: .bottomTrailing
+//            )
+//            .ignoresSafeArea()
+//
+//            
+//            VStack {
+//                Text("深圳").font(.system(size: 60))
+//                    .foregroundStyle(.white)
+//                    .onTapGesture {
+//                        isDark.toggle()
+//                    }
+//
+//                Image(systemName: "cloud.sun.fill")
+//                    .renderingMode(.original)
+//                    .resizable()
+//                    .scaledToFit()
+//                    .frame(width: 160, height: 160)
+//
+//                Text("\(degree)°")
+//                    .font(.system(size: 40))
+//                    .foregroundStyle(.white)
+//                    .onTapGesture {
+//                        degree -= 1
+//                    }
+//
+//                Spacer()
+//
+//                HStack(spacing: 10) {
+//                    FutureWeather(
+//                        day: "周一", weather: "cloud.sun.fill", degree: 27)
+//
+//                    FutureWeather(
+//                        day: "周一", weather: "cloud.sun.fill", degree: 27)
+//
+//                    FutureWeather(
+//                        day: "周一", weather: "cloud.sun.fill", degree: 27)
+//
+//                    FutureWeather(
+//                        day: "周一", weather: "cloud.sun.fill", degree: 27)
+//
+//                    FutureWeather(
+//                        day: "周一", weather: "cloud.sun.fill", degree: 27)
+//                }
+//
+//                Spacer()
+//
+//                Button {
+//                    degree += 1
+//                } label: {
+//                    Text("降温")
+//                        .bold()
+//                        .font(.title2)
+//                        .frame(width: 280, height: 50)
+//                        .background(.white)
+//                        .cornerRadius(8)
+//                }
+//            }
+//        }
+//    }
+//}
+//
+//struct FutureWeather: View {
+//    var day: String
+//    var weather: String
+//    var degree: Int
+//    var body: some View {
+//        VStack {
+//            Text(day)
+//                .foregroundStyle(.white)
+//            Image(systemName: weather)
+//                .renderingMode(.original)
+//                .resizable()
+//                .scaledToFit()
+//                .frame(width: 52, height: 52)
+//
+//            Text("\(degree)°")
+//                .font(.system(size: 40))
+//                .foregroundStyle(.white)
+//
+//        }
+//    }
+//}
+//
+//#Preview {
+//    ContentView()
+//}
 
 import SwiftUI
 
 struct ContentView: View {
-    @State var degree: Int = 37
-    @State var isDark = false
+    @StateObject private var viewModel = WeatherViewModel()
     
     var body: some View {
-        ZStack{
-            LinearGradient(colors:isDark ?  [Color.black, Color.gray] : [ Color.blue, Color.white], startPoint: .topLeading, endPoint: .bottomTrailing)
-                .ignoresSafeArea()
+        ZStack {
+            // 背景
+            BackgroundView(theme: viewModel.currentTheme)
             
-            VStack {
-                Text("深圳").font(.system(size: 60))
-                    .foregroundStyle(.white)
+            // 主要内容
+            VStack(spacing: 20) {
+                // 城市名称
+                Text(viewModel.currentCity)
+                    .font(.system(size: 60))
+                    .foregroundColor(viewModel.currentTheme.textColor)
                     .onTapGesture {
-                        isDark.toggle()
+                        viewModel.toggleTheme()
                     }
                 
-                Image(systemName: "cloud.sun.fill")
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 160,height: 160)
+                // 当前天气图标
+                WeatherIcon(iconName: viewModel.currentWeather.rawValue)
                 
-                Text("\(degree)°")
+                // 当前温度
+                Text("\(viewModel.temperature)°")
                     .font(.system(size: 40))
-                    .foregroundStyle(.white)
+                    .foregroundColor(viewModel.currentTheme.textColor)
                     .onTapGesture {
-                        degree -= 1
+                        viewModel.decreaseTemperature()
                     }
                 
+                Spacer()
+                
+                // 未来天气预报
+                WeatherForecastView(
+                    forecasts: viewModel.forecasts,
+                    theme: viewModel.currentTheme
+                )
                 
                 Spacer()
                 
-                HStack(spacing: 15){
-                    FutureWeather(day:"周一",   weather: "cloud.sun.fill", degree:  27)
+                // 控制按钮
+                VStack(spacing: 10) {
+                    WeatherButton(title: "升温") {
+                        viewModel.increaseTemperature()
+                    }
                     
-                    FutureWeather(day:"周一",   weather: "cloud.sun.fill", degree:  27)
-                
-                    FutureWeather(day:"周一",   weather: "cloud.sun.fill", degree:  27)
-                
-                    FutureWeather(day:"周一",   weather: "cloud.sun.fill", degree:  27)
-                
-                    FutureWeather(day:"周一",   weather: "cloud.sun.fill", degree:  27)
-                
-                    FutureWeather(day:"周一",   weather: "cloud.sun.fill", degree:  27)
-                }
-                
-                Spacer()
-                
-                Button{
-                    degree += 1
-                } label: {
-                    Text("降温")
-                        .bold()
-                        .font(.title2)
-                        .frame(width: 280, height: 50)
-                        .background(.white)
-                        .cornerRadius(8)
+                    WeatherButton(title: "降温") {
+                        viewModel.decreaseTemperature()
+                    }
                 }
             }
+            .padding()
         }
     }
 }
 
-
-struct FutureWeather:View {
-    var day: String
-    var weather : String
-    var degree : Int
-    var body: some View {
-        VStack{
-            Text(day)
-            Image(systemName: weather)
-                .renderingMode(.original)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 52, height: 52)
+// 预览支持
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            ContentView()
+                .previewDisplayName("Light Mode")
             
-            Text("\(degree)°")
-                .font(.system(size: 40))
-                .foregroundStyle(.white)
-            
+            ContentView()
+                .preferredColorScheme(.dark)
+                .previewDisplayName("Dark Mode")
         }
     }
-}
-
-#Preview {
-    ContentView()
 }
